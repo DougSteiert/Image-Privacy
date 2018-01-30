@@ -3,30 +3,32 @@ import random
 numUsers = 200
 maxShare = 10
 
-lines = open('names.txt').read().splitlines()
+# lines = open('names.txt').read().splitlines()
 
 people = []
 
 relationships = {"None": 0, "Co-worker": 1, "Friend": 2, "Family": 3, "Close Friend": 4, "Close Family": 5}
 
-oneMillLines = open("onemill.txt").read().splitlines()
+# oneMillLines = open("onemill.txt").read().splitlines()
+#
+# for x in range(1, numUsers + 1):
+#     myline = random.choice(oneMillLines)
+#     people.append(myline)
+#
+# socialNetwork = {}
+#
+# for person in people:
+#     socialNetwork[person] = {}
 
-for x in range(1, numUsers + 1):
-    myline = random.choice(oneMillLines)
-    people.append(myline)
-
-socialNetwork = {}
-
-for person in people:
-    socialNetwork[person] = {}
-
-def share(mainPerson, maxShare, level, previousFriend, friendsList, socialNetwork):
+def share(mainPerson, maxShare, level, previousFriend, friendsList, sharedPeopleList):
+    socialNetwork = {}
+    socialNetwork[mainPerson] = {}
     numberFriends = 0
     randShare = 0
     if mainPerson in friendsList:
         for someFriend in friendsList[mainPerson]:
             numberFriends += 1
-    if level >= 5 or numberFriends <= 1:
+    if level >= 5 or numberFriends <= 1 or mainPerson in sharedPeopleList:
         pass
     else:
         for friend in friendsList[mainPerson]:
@@ -37,11 +39,12 @@ def share(mainPerson, maxShare, level, previousFriend, friendsList, socialNetwor
         textFile.write(mainPerson)
         textFile.write(str(socialNetwork[mainPerson]))
         textFile.write('\n')
+        sharedPeopleList.append(mainPerson)
         for friend in friendsList[mainPerson]:
-                share(friend, randShare, level+1, mainPerson, friendsList, socialNetwork)
+                share(friend, randShare, level+1, mainPerson, friendsList, sharedPeopleList)
 
-friends = {}
-
+# friends = {}
+#
 # for person in people:
 #     numFriends = 10
 #     tempFriends = []
@@ -54,16 +57,14 @@ friends = {}
 #     friends[person] = tempFriends
 #     socialNetwork[person] = {}
 #
+# textFile = open("SynthSocialNetwork.txt", "w")
+# sharedFakePeople = []
 # for person in people:
 #     level = 0
 #     previousPerson = ""
-#     share(person, maxShare, level, previousPerson, friends, socialNetwork)
-#
-# textFile = open("SynthSocialNetwork.txt", "w")
-# for key, value in socialNetwork.iteritems():
-#     textFile.write(key)
-#     textFile.write(str(value))
-#     textFile.write("\n")
+#     share(person, maxShare, level, previousPerson, friends, sharedFakePeople)
+
+# textFile.close()
 
 
 # uncomment if using real set
@@ -83,24 +84,12 @@ for line in realSet:
             tempRealFriends.append(word)
     realFriends[firstPerson] = tempRealFriends
 
-print realPeople.__sizeof__()
-
 textFile = open("RealSocialNetwork.txt", "w")
 
-loop = 1
+personShared = []
 for person in realPeople:
-    realSocialNetwork = {}
-    for person in realPeople:
-        realSocialNetwork[person] = {}
     level = 0
     previousPerson = ""
-    print("still running ", loop)
-    loop += 1
-    share(person, maxShare, level, previousPerson, realFriends, realSocialNetwork)
+    share(person, maxShare, level, previousPerson, realFriends, personShared)
 
 textFile.close()
-
-# for key, value in realSocialNetwork.iteritems():
-#     textFile.write(key)
-#     textFile.write(str(value))
-#     textFile.write("\n")
