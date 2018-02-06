@@ -20,7 +20,7 @@ relationships = {"None": 0, "Co-worker": 1, "Friend": 2, "Family": 3, "Close Fri
 # for person in people:
 #     socialNetwork[person] = {}
 
-def share(mainPerson, maxShare, level, previousFriend, friendsList, sharedPeopleList, origShares):
+def share(mainPerson, recShares, level, previousFriend, friendsList, sharedPeopleList, origShares, origSender):
     socialNetwork = {}
     socialNetwork[mainPerson] = {}
     numberFriends = 0
@@ -28,25 +28,24 @@ def share(mainPerson, maxShare, level, previousFriend, friendsList, sharedPeople
     if mainPerson in friendsList:
         for someFriend in friendsList[mainPerson]:
             numberFriends += 1
-    if level >= 5 or numberFriends < 1 or mainPerson in sharedPeopleList:
+    if level >= 5 or numberFriends < 1 :
         pass
     else:
         for friend in friendsList[mainPerson]:
             if friend is not previousFriend:
-                randShare = random.randint(1, maxShare)
-                relationToUse = "Close Friend"
-                socialNetwork[mainPerson][friend] = (relationToUse, randShare)
+                randShare = random.randint(1, recShares)
+                # relationToUse = "Close Friend"
+                socialNetwork[mainPerson][friend] = (origSender, mainPerson, randShare, recShares)
         textFile.write(mainPerson)
-        if mainPerson in origShares:
-            textFile.write(" " + str(origShares[mainPerson]))
+        # if mainPerson in origShares:
+        #     textFile.write(" " + str(origShares[mainPerson]))
         textFile.write(str(socialNetwork[mainPerson]))
         textFile.write('\n')
         sharedPeopleList.append(mainPerson)
         for friend in friendsList[mainPerson]:
             if friend is not previousFriend:
-                (relation, shares) = socialNetwork[mainPerson][friend]
-                randShare = random.randint(1, shares)
-                share(friend, randShare, level+1, mainPerson, friendsList, sharedPeopleList, origShares)
+                (origin, direct, receivedShares, directShares) = socialNetwork[mainPerson][friend]
+                share(friend, receivedShares, level+1, mainPerson, friendsList, sharedPeopleList, origShares, origSender)
 
 # friends = {}
 #
@@ -84,7 +83,7 @@ for line in realSet:
     for word in line.split():
         if first:
             realPeople.append(str(word))
-            originalShares[word] = maxShare
+            originalShares[word] = random.randint(1, maxShare)
             firstPerson = word
             first = False
         else:
@@ -96,7 +95,9 @@ textFile = open("RealSocialNetwork.txt", "w")
 personShared = []
 for person in realPeople:
     level = 0
+    print person
     previousPerson = ""
-    share(person, maxShare, level, previousPerson, realFriends, personShared, originalShares)
+    originalSender = person
+    share(person, originalShares[person], level, previousPerson, realFriends, personShared, originalShares, originalSender)
 
 textFile.close()
