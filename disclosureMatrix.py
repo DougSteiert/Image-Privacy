@@ -6,14 +6,15 @@ startTime = time.time()
 socialNetwork = {}
 allPeople = []
 
-with open("SocialNetwork.txt") as f:
+firstOrderShares = {}
+
+with open("RealSocialNetwork.txt") as f:
     for line in f:
         (key, value) = line.split('{')
+        (person, shares) = key.split(' ')
         newValue = '{' + value
-        socialNetwork[key] = eval(newValue)
-
-source = "Sue"
-target = "Alan"
+        firstOrderShares[person] = shares
+        socialNetwork[person] = eval(newValue)
 
 shareNetwork = {}
 
@@ -38,6 +39,7 @@ for person, info in socialNetwork.iteritems():
     for friend, (relation, shares) in info.iteritems():
         dgraph.add_edge(person, friend)
 
+# nx.write_graphml(dgraph, "twitter.graphml")
 
 # Compute the probability score between somePerson and aFriend based on existing parents array
 def computeScore(somePerson, aFriend, parentsList):
@@ -53,8 +55,8 @@ def computeScore(somePerson, aFriend, parentsList):
     if aFriend in shareNetwork[somePerson]:
         sharesToFriend = shareNetwork[somePerson][aFriend]
 
-    if sharesToPerson == 0:
-        probability = 1
+    if sharesToPerson == 0 and somePerson in firstOrderShares:
+        probability = float(sharesToFriend)/(float(firstOrderShares[somePerson]))
     else:
         probability = float(sharesToFriend)/float(sharesToPerson)
 
@@ -77,10 +79,7 @@ def checkParents(mainFriend, parentsMap):
 def computeChild(mainPerson, newFriend, probMatrix, parentsList, friendsList):
     for aParent in dgraph.predecessors(newFriend):
         if aParent in parentsList:
-            if aParent == mainPerson:
-                score = 1
-            else:
-                score = computeScore(aParent, newFriend, parentsList)
+            score = computeScore(aParent, newFriend, parentsList)
 
             if newFriend in probMatrix[mainPerson]:
                 if aParent == mainPerson:
@@ -91,6 +90,8 @@ def computeChild(mainPerson, newFriend, probMatrix, parentsList, friendsList):
                     else:
                         scoreToUse = 1
                 probMatrix[mainPerson][newFriend] += (scoreToUse * score)
+                if probMatrix[mainPerson][newFriend] > 1:
+                    probMatrix[mainPerson][newFriend] = 1
             else:
                 miniProbability = {}
                 if aParent == mainPerson:
@@ -140,20 +141,22 @@ def calculateProb(someone, firstFriends, probMatrix, parents):
 loop = 1
 finalProbMatrix = {}
 for person in allPeople:
-    # print loop
-    loop += 1
-    friends1 = []
-    finalProbMatrix[person] = {}
-    parents = {}
-    if person in socialNetwork:
-        for friend, info in socialNetwork[person].iteritems():
-            friends1.append(friend)
-            if dgraph.successors(friend):
-                parents[friend] = False
-
-        calculateProb(person, friends1, finalProbMatrix, parents)
-    else:
+    if person is "58":
+        # print loop, person
+        # loop += 1
+        friends1 = []
         finalProbMatrix[person] = {}
+        parents = {}
+        if person in socialNetwork:
+            for friend, info in socialNetwork[person].iteritems():
+                friends1.append(friend)
+                if dgraph.successors(friend):
+                    parents[friend] = False
+
+            calculateProb(person, friends1, finalProbMatrix, parents)
+        else:
+            finalProbMatrix[person] = {}
+        break
 
 print (time.time() - startTime)
 

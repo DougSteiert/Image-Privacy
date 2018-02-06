@@ -1,7 +1,7 @@
 import random
 
 numUsers = 200
-maxShare = 10
+maxShare = 500
 
 # lines = open('names.txt').read().splitlines()
 
@@ -20,7 +20,7 @@ relationships = {"None": 0, "Co-worker": 1, "Friend": 2, "Family": 3, "Close Fri
 # for person in people:
 #     socialNetwork[person] = {}
 
-def share(mainPerson, maxShare, level, previousFriend, friendsList, sharedPeopleList):
+def share(mainPerson, maxShare, level, previousFriend, friendsList, sharedPeopleList, origShares):
     socialNetwork = {}
     socialNetwork[mainPerson] = {}
     numberFriends = 0
@@ -28,7 +28,7 @@ def share(mainPerson, maxShare, level, previousFriend, friendsList, sharedPeople
     if mainPerson in friendsList:
         for someFriend in friendsList[mainPerson]:
             numberFriends += 1
-    if level >= 5 or numberFriends <= 1 or mainPerson in sharedPeopleList:
+    if level >= 5 or numberFriends < 1 or mainPerson in sharedPeopleList:
         pass
     else:
         for friend in friendsList[mainPerson]:
@@ -37,11 +37,16 @@ def share(mainPerson, maxShare, level, previousFriend, friendsList, sharedPeople
                 relationToUse = "Close Friend"
                 socialNetwork[mainPerson][friend] = (relationToUse, randShare)
         textFile.write(mainPerson)
+        if mainPerson in origShares:
+            textFile.write(" " + str(origShares[mainPerson]))
         textFile.write(str(socialNetwork[mainPerson]))
         textFile.write('\n')
         sharedPeopleList.append(mainPerson)
         for friend in friendsList[mainPerson]:
-                share(friend, randShare, level+1, mainPerson, friendsList, sharedPeopleList)
+            if friend is not previousFriend:
+                (relation, shares) = socialNetwork[mainPerson][friend]
+                randShare = random.randint(1, shares)
+                share(friend, randShare, level+1, mainPerson, friendsList, sharedPeopleList, origShares)
 
 # friends = {}
 #
@@ -71,6 +76,7 @@ def share(mainPerson, maxShare, level, previousFriend, friendsList, sharedPeople
 realPeople = []
 realFriends = {}
 realSet = open("realDataset.txt", "r")
+originalShares = {}
 for line in realSet:
     first = True
     firstPerson = ""
@@ -78,6 +84,7 @@ for line in realSet:
     for word in line.split():
         if first:
             realPeople.append(str(word))
+            originalShares[word] = maxShare
             firstPerson = word
             first = False
         else:
@@ -90,6 +97,6 @@ personShared = []
 for person in realPeople:
     level = 0
     previousPerson = ""
-    share(person, maxShare, level, previousPerson, realFriends, personShared)
+    share(person, maxShare, level, previousPerson, realFriends, personShared, originalShares)
 
 textFile.close()
