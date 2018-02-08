@@ -20,32 +20,33 @@ relationships = {"None": 0, "Co-worker": 1, "Friend": 2, "Family": 3, "Close Fri
 # for person in people:
 #     socialNetwork[person] = {}
 
-def share(mainPerson, recShares, level, previousFriend, friendsList, sharedPeopleList, origShares, origSender):
-    socialNetwork = {}
-    socialNetwork[mainPerson] = {}
+def share(mainPerson, level, socNetwork, previousFriend, friendsList, origShares, origSender, sharedPpl):
     numberFriends = 0
-    randShare = 0
     if mainPerson in friendsList:
         for someFriend in friendsList[mainPerson]:
             numberFriends += 1
-    if level >= 5 or numberFriends < 1 :
+    if level >= 2 or numberFriends < 1 or (mainPerson is origSender and mainPerson in sharedPpl):
         pass
     else:
-        for friend in friendsList[mainPerson]:
-            if friend is not previousFriend:
-                randShare = random.randint(1, recShares)
-                # relationToUse = "Close Friend"
-                socialNetwork[mainPerson][friend] = (origSender, mainPerson, randShare, recShares)
-        textFile.write(mainPerson)
-        # if mainPerson in origShares:
-        #     textFile.write(" " + str(origShares[mainPerson]))
-        textFile.write(str(socialNetwork[mainPerson]))
-        textFile.write('\n')
-        sharedPeopleList.append(mainPerson)
-        for friend in friendsList[mainPerson]:
-            if friend is not previousFriend:
-                (origin, direct, receivedShares, directShares) = socialNetwork[mainPerson][friend]
-                share(friend, receivedShares, level+1, mainPerson, friendsList, sharedPeopleList, origShares, origSender)
+        if mainPerson not in origShares:
+            pass
+        else:
+            for friend in friendsList[mainPerson]:
+                if friend is not previousFriend and friend is not origSender:
+                    randShare = random.randint(0, origShares[mainPerson])
+                    # relationToUse = "Close Friend"
+                    socNetwork[mainPerson][friend] = (origSender, mainPerson, randShare, origShares[mainPerson])
+                    origShares[friend] = randShare
+            textFile.write(mainPerson)
+            # if mainPerson in origShares:
+            #     textFile.write(" " + str(origShares[mainPerson]))
+            textFile.write(str(socNetwork[mainPerson]))
+            textFile.write('\n')
+            sharedPpl.append(mainPerson)
+            for friend in friendsList[mainPerson]:
+                if friend is not previousFriend and friend is not origSender:
+                    (origin, direct, receivedShares, directShares) = socNetwork[mainPerson][friend]
+                    share(friend, level+1, socNetwork, mainPerson, friendsList, origShares, origSender, sharedPpl)
 
 # friends = {}
 #
@@ -70,34 +71,70 @@ def share(mainPerson, recShares, level, previousFriend, friendsList, sharedPeopl
 
 # textFile.close()
 
+textFile = open("TwitterNetwork.txt", "w")
+socialNetwork = {}
 
 # uncomment if using real set
+numShared = 0
 realPeople = []
 realFriends = {}
-realSet = open("realDataset.txt", "r")
+realSet = open("twitter_combined.txt", "r")
 originalShares = {}
+randCoin = 0
 for line in realSet:
     first = True
     firstPerson = ""
     tempRealFriends = []
     for word in line.split():
         if first:
-            realPeople.append(str(word))
-            originalShares[word] = random.randint(1, maxShare)
-            firstPerson = word
-            first = False
+            if int(word) > 1000:
+                if word in socialNetwork:
+                    if numShared < 1:
+                        originalShares[word] = random.randint(0, maxShare)
+                        firstPerson = word
+                        socialNetwork[word][word] = (word, '#', originalShares[word], originalShares[word])
+                        first = False
+                        numShared += 1
+                    else:
+                        firstPerson = word
+                        first = False
+                else:
+                    if numShared < 1:
+                        originalShares[word] = random.randint(0, maxShare)
+                        firstPerson = word
+                        socialNetwork[word] = {}
+                        socialNetwork[word][word] = (word, '#', originalShares[word], originalShares[word])
+                        first = False
+                        numShared += 1
+                    else:
+                        firstPerson = word
+                        first = False
+                        socialNetwork[word] = {}
+            else:
+                if word in socialNetwork:
+                    firstPerson = word
+                    first = False
+                else:
+                    firstPerson = word
+                    socialNetwork[word] = {}
+                    first = False
+            if word not in realPeople:
+                realPeople.append(str(word))
         else:
-            tempRealFriends.append(word)
+            randCoin = random.randint(1,10)
+            if randCoin <= 1:
+                tempRealFriends.append(word)
+
     realFriends[firstPerson] = tempRealFriends
 
-textFile = open("RealSocialNetwork.txt", "w")
-
-personShared = []
+loop = 1
+sharedPeople = []
 for person in realPeople:
     level = 0
-    print person
+    # print loop
+    # loop += 1
     previousPerson = ""
     originalSender = person
-    share(person, originalShares[person], level, previousPerson, realFriends, personShared, originalShares, originalSender)
+    share(person, level, socialNetwork, previousPerson, realFriends, originalShares, originalSender, sharedPeople)
 
 textFile.close()
