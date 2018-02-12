@@ -71,14 +71,14 @@ def share(mainPerson, level, socNetwork, previousFriend, friendsList, origShares
 
 # textFile.close()
 
-textFile = open("TwitterNetwork.txt", "w")
+textFile = open("GooglePlusNetwork.txt", "w")
 socialNetwork = {}
 
 # uncomment if using real set
 numShared = 0
 realPeople = []
 realFriends = {}
-realSet = open("twitter_combined.txt", "r")
+realSet = open("gplus_combined.txt", "r")
 originalShares = {}
 randCoin = 0
 for line in realSet:
@@ -125,7 +125,12 @@ for line in realSet:
             if randCoin <= 1:
                 tempRealFriends.append(word)
 
-    realFriends[firstPerson] = tempRealFriends
+    if firstPerson not in realFriends:
+        realFriends[firstPerson] = tempRealFriends
+    else:
+        for eachFriend in tempRealFriends:
+            realFriends[firstPerson].append(eachFriend)
+
 
 loop = 1
 sharedPeople = []
