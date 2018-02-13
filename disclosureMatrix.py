@@ -1,5 +1,6 @@
 import networkx as nx
 import time
+import ast
 
 startTime = time.time()
 
@@ -8,13 +9,14 @@ allPeople = []
 
 firstOrderShares = {}
 
-with open("RealSocialNetwork.txt") as f:
+with open("TestNetwork.txt") as f:
     for line in f:
         (key, value) = line.split('{')
-        (person, shares) = key.split(' ')
+        # (person, shares) = key.split(' ')
         newValue = '{' + value
-        firstOrderShares[person] = shares
-        socialNetwork[person] = eval(newValue)
+        newValue = newValue.rstrip()
+        newDict = ast.literal_eval(newValue)
+        socialNetwork[key] = newDict
 
 shareNetwork = {}
 
@@ -23,11 +25,16 @@ for person, connection in socialNetwork.iteritems():
     if person not in allPeople:
         allPeople.append(person)
     directConnections = {}
-    for friend, (relation, shares) in connection.iteritems():
+    for friend, (origin, direct, sentShares, origShares) in connection.iteritems():
+        if friend == person:
+            firstOrderShares[person] = origShares
         if friend not in allPeople:
             allPeople.append(friend)
-        directConnections[friend] = shares
+        directConnections[friend] = sentShares
     shareNetwork[person] = directConnections
+
+
+print shareNetwork
 
 # The total amount of people within the network, used later for looping
 totalPeople = len(allPeople)
