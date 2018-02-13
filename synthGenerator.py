@@ -71,14 +71,14 @@ def share(mainPerson, level, socNetwork, previousFriend, friendsList, origShares
 
 # textFile.close()
 
-textFile = open("GooglePlusNetwork.txt", "w")
+textFile = open("TestNetwork.txt", "w")
 socialNetwork = {}
 
 # uncomment if using real set
 numShared = 0
 realPeople = []
 realFriends = {}
-realSet = open("gplus_combined.txt", "r")
+realSet = open("test.txt", "r")
 originalShares = {}
 randCoin = 0
 for line in realSet:
@@ -87,7 +87,7 @@ for line in realSet:
     tempRealFriends = []
     for word in line.split():
         if first:
-            if int(word) > 1000:
+            if not isinstance(word, str):
                 if word in socialNetwork:
                     if numShared < 1:
                         originalShares[word] = random.randint(0, maxShare)
@@ -110,19 +110,44 @@ for line in realSet:
                         firstPerson = word
                         first = False
                         socialNetwork[word] = {}
+                # else:
+                #     if word in socialNetwork:
+                #         firstPerson = word
+                #         first = False
+                #     else:
+                #         firstPerson = word
+                #         socialNetwork[word] = {}
+                #         first = False
+                if word not in realPeople:
+                    realPeople.append(str(word))
             else:
                 if word in socialNetwork:
-                    firstPerson = word
-                    first = False
+                    if numShared < 1:
+                        originalShares[word] = random.randint(0, maxShare)
+                        firstPerson = word
+                        socialNetwork[word][word] = (word, '#', originalShares[word], originalShares[word])
+                        first = False
+                        numShared += 1
+                    else:
+                        firstPerson = word
+                        first = False
                 else:
-                    firstPerson = word
-                    socialNetwork[word] = {}
-                    first = False
+                    if numShared < 1:
+                        originalShares[word] = random.randint(0, maxShare)
+                        firstPerson = word
+                        socialNetwork[word] = {}
+                        socialNetwork[word][word] = (word, '#', originalShares[word], originalShares[word])
+                        first = False
+                        numShared += 1
+                    else:
+                        firstPerson = word
+                        first = False
+                        socialNetwork[word] = {}
             if word not in realPeople:
                 realPeople.append(str(word))
         else:
             randCoin = random.randint(1,10)
-            if randCoin <= 1:
+            if randCoin <= 10:
                 tempRealFriends.append(word)
 
     if firstPerson not in realFriends:
