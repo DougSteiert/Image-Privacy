@@ -34,7 +34,6 @@ for person, connection in socialNetwork.iteritems():
     shareNetwork[person] = directConnections
 
 
-print shareNetwork
 
 # The total amount of people within the network, used later for looping
 totalPeople = len(allPeople)
@@ -113,13 +112,38 @@ def computeChild(mainPerson, newFriend, probMatrix, parentsList, friendsList):
 
     parentsList[newFriend] = True
 
+def checkParentsTwo(theProbMatrix, parentsList, mainFriend):
+    numReady = 0
+    for parent in parentsList:
+        if parent in theProbMatrix[mainFriend]:
+            numReady += 1
+
+    return numReady
+
+def expansionRoutine(friend, firstFriends, friendsParents):
+    friendsFriends = dgraph.successors(friend)
+
+    for successor in friendsFriends:
+        if not successor in firstFriends:
+            firstFriends.append(successor)
+            friendsParents[successor] = dgraph.predecessors(successor)
 
 # Calculates the probability of someone and all their friends
 def calculateProb(someone, firstFriends, probMatrix, parents):
     parents[someone] = True
+    friendsParents = {}
 
     while firstFriends:
         for friend in firstFriends:
+            friendsParents[friend] = dgraph.predecessors(friend)
+            numberParentsCalc = checkParentsTwo(probMatrix, parents, friend, someone)
+
+            if numberParentsCalc == len(friendsParents):
+                computeChild(someone, friend, probMatrix, friendsParents, firstFriends)
+                firstFriends.remove(friend)
+            expansionRoutine(friend, firstFriends, friendsParents)
+
+
             if friend in parents:
                 if parents[friend] is True:
                     firstFriends.remove(friend)
@@ -148,22 +172,20 @@ def calculateProb(someone, firstFriends, probMatrix, parents):
 loop = 1
 finalProbMatrix = {}
 for person in allPeople:
-    if person is "58":
-        # print loop, person
-        # loop += 1
-        friends1 = []
-        finalProbMatrix[person] = {}
-        parents = {}
-        if person in socialNetwork:
-            for friend, info in socialNetwork[person].iteritems():
-                friends1.append(friend)
-                if dgraph.successors(friend):
-                    parents[friend] = False
+    # print loop, person
+    # loop += 1
+    priorityQueue = []
+    finalProbMatrix[person] = {}
+    parents = {}
+    if person in socialNetwork:
+        for friend, info in socialNetwork[person].iteritems():
+            priorityQueue.append(friend)
+            # if dgraph.successors(friend):
+            #     parents[friend] = False
 
-            calculateProb(person, friends1, finalProbMatrix, parents)
-        else:
-            finalProbMatrix[person] = {}
-        break
+        calculateProb(person, priorityQueue, finalProbMatrix, parents)
+    # else:
+    #     finalProbMatrix[person] = {}
 
 print (time.time() - startTime)
 
