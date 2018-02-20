@@ -89,7 +89,7 @@ for line in realSet:
         if first:
             if not isinstance(word, str):
                 if word in socialNetwork:
-                    if numShared < 1:
+                    if numShared < 99999:
                         originalShares[word] = random.randint(0, maxShare)
                         firstPerson = word
                         socialNetwork[word][word] = (word, '#', originalShares[word], originalShares[word])
@@ -99,7 +99,7 @@ for line in realSet:
                         firstPerson = word
                         first = False
                 else:
-                    if numShared < 1:
+                    if numShared < 999999:
                         originalShares[word] = random.randint(0, maxShare)
                         firstPerson = word
                         socialNetwork[word] = {}
@@ -132,7 +132,7 @@ for line in realSet:
                         firstPerson = word
                         first = False
                 else:
-                    if numShared < 1:
+                    if numShared < 9999:
                         originalShares[word] = random.randint(0, maxShare)
                         firstPerson = word
                         socialNetwork[word] = {}

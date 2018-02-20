@@ -32,8 +32,6 @@ with open("TestNetwork.txt") as f:
 
 shareNetwork = {}
 
-print socialNetwork
-
 # # Create a share network, similar to the social network, but for easier access to get shares to people
 # for person, theList in socialNetwork.iteritems():
 #     if person not in allPeople:
@@ -70,12 +68,11 @@ def computeScore(somePerson, aFriend, parentsList):
     sharesToPerson = 0
     sharesToFriend = 0
 
-    for theLists in socialNetwork[person]:
+    for theLists in socialNetwork[somePerson]:
         for friend, (originalSender, directSender, sentShares, origShares) in theLists.items():
             if friend == aFriend:
                 sharesToFriend = sentShares
                 sharesToPerson = origShares
-
 
     if somePerson in firstOrderShares and origin == somePerson:
         probability = float(sharesToFriend)/(float(firstOrderShares[somePerson]))
@@ -86,9 +83,9 @@ def computeScore(somePerson, aFriend, parentsList):
 
 
 # Check if the parents of mainFriend have already been computed, so that mainFriend may be computed
-def checkParents(mainFriend, parentsMap):
+def checkParents(mainFriend, parentsMap, parentsList):
     allComputed = False
-    for parent in dgraph.predecessors(mainFriend):
+    for parent in parentsList[mainFriend]:
         if parent in parentsMap and parentsMap[parent] is True:
             allComputed = True
         elif parent in parentsMap and parentsMap[parent] is False:
@@ -98,8 +95,9 @@ def checkParents(mainFriend, parentsMap):
     return allComputed
 
 
-def computeChild(mainPerson, newFriend, probMatrix, parentsList):
+def computeChild(mainPerson, newFriend, probMatrix, parentsList, parents):
     for aParent in parentsList[newFriend]:
+        if aParent in parents:
             score = computeScore(aParent, newFriend, parentsList)
 
             if newFriend in probMatrix[mainPerson]:
@@ -110,7 +108,7 @@ def computeChild(mainPerson, newFriend, probMatrix, parentsList):
                         scoreToUse = probMatrix[mainPerson][aParent]
                     else:
                         scoreToUse = 1
-                probMatrix[mainPerson][newFriend] += (scoreToUse * score)
+                probMatrix[mainPerson][newFriend] = (scoreToUse * (1 - score))
                 if probMatrix[mainPerson][newFriend] > 1:
                     probMatrix[mainPerson][newFriend] = 1
             else:
@@ -122,10 +120,10 @@ def computeChild(mainPerson, newFriend, probMatrix, parentsList):
                         scoreToUse = probMatrix[mainPerson][aParent]
                     else:
                         scoreToUse = 1
-                miniProbability[newFriend] = scoreToUse * score
+                miniProbability[newFriend] = (scoreToUse * (1 - score))
                 probMatrix[mainPerson].update(miniProbability)
 
-    parentsList[newFriend] = True
+    parents[newFriend] = True
 
 def checkParentsTwo(theProbMatrix, parentsList, mainFriend, theChild, priQ):
     numReady = 0
@@ -153,8 +151,12 @@ def calculateProb(someone, firstFriends, probMatrix, parents):
 
     while firstFriends:
         for friend in firstFriends:
-            # if friend not in friendsParents:
-            #     friendsParents[friend] = dgraph.predecessors(friend)
+            if friend not in friendsParents:
+                temp = []
+                for eachPred in dgraph.predecessors(friend):
+                    if eachPred != friend:
+                        temp.append(eachPred)
+                friendsParents[friend] = temp
             # numberParentsCalc = checkParentsTwo(probMatrix, friendsParents, someone, friend, priorityQueue)
             #
             # if numberParentsCalc == len(friendsParents[friend]):
@@ -162,13 +164,20 @@ def calculateProb(someone, firstFriends, probMatrix, parents):
             #     firstFriends.remove(friend)
             # expansionRoutine(friend, firstFriends, friendsParents)
 
+            if friend in parents:
+                if parents[friend] is True:
+                        firstFriends.remove(friend)
+                        break
+
             if friend in socialNetwork:
                 for listsOfPeople in socialNetwork[friend]:
                     for newFriend, (origin, direct, sentShares, origShares) in listsOfPeople.items():
-                        if newFriend in parents and parents[newFriend] is True:
+                        if newFriend == friend:
+                            pass
+                        elif newFriend in parents and parents[newFriend] is True:
                             pass
                         elif newFriend in firstFriends and newFriend in dgraph.predecessors(friend):
-                            computeChild(someone, newFriend, probMatrix, parents)
+                            computeChild(someone, newFriend, probMatrix, friendsParents, parents)
                         elif newFriend not in firstFriends:
                             firstFriends.append(newFriend)
                             if dgraph.successors(newFriend):
@@ -177,7 +186,7 @@ def calculateProb(someone, firstFriends, probMatrix, parents):
                                     if eachSuccessor not in firstFriends:
                                         firstFriends.append(eachSuccessor)
                                     elif eachSuccessor in firstFriends:
-                                        computeChild(someone, eachSuccessor, probMatrix, parents, firstFriends)
+                                        computeChild(someone, eachSuccessor, probMatrix, friendsParents, parents)
 
 
             # if friend in parents:
@@ -200,9 +209,9 @@ def calculateProb(someone, firstFriends, probMatrix, parents):
             #                     elif eachSuccessor in firstFriends:
             #                         computeChild(someone, eachSuccessor, probMatrix, parents, firstFriends)
 
-            isReady = checkParents(friend, parents)
+            isReady = checkParents(friend, parents, friendsParents)
             if isReady:
-                computeChild(someone, friend, probMatrix, parents, firstFriends)
+                computeChild(someone, friend, probMatrix, friendsParents, parents)
                 firstFriends.remove(friend)
 
 loop = 1
@@ -218,8 +227,8 @@ for person in allPeople:
             for theFriend, (origin, direct, sent, orig) in listsOfInfo.items():
                 if theFriend != person and (theFriend not in priorityQueue):
                     priorityQueue.append(theFriend)
-                # if dgraph.successors(friend):
-                #     parents[friend] = False
+                if dgraph.successors(theFriend):
+                    parents[theFriend] = False
 
         finalProbMatrix[person][person] = 1
         calculateProb(person, priorityQueue, finalProbMatrix, parents)
