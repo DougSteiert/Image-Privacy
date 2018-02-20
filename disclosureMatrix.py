@@ -133,7 +133,7 @@ def computeChild(mainPerson, newFriend, probMatrix, parentsList, parents, propag
                                 scoreToUse = probMatrix[mainPerson][aParent]
                             else:
                                 scoreToUse = 1
-                        miniProbability[newFriend] = (scoreToUse * (1 - score))
+                        miniProbability[newFriend] = (1 * (1 - score*scoreToUse))
                         probMatrix[mainPerson].update(miniProbability)
     else:
         for aParent in holdList:
@@ -160,7 +160,7 @@ def computeChild(mainPerson, newFriend, probMatrix, parentsList, parents, propag
                         scoreToUse = probMatrix[mainPerson][aParent]
                     else:
                         scoreToUse = 1
-                miniProbability[newFriend] = (scoreToUse * (1 - score))
+                miniProbability[newFriend] = (1 * (1 - score*scoreToUse))
                 probMatrix[mainPerson].update(miniProbability)
 
     probMatrix[mainPerson][newFriend] = 1 - probMatrix[mainPerson][newFriend]
