@@ -71,14 +71,14 @@ def share(mainPerson, level, socNetwork, previousFriend, friendsList, origShares
 
 # textFile.close()
 
-textFile = open("TestNetwork.txt", "w")
+textFile = open("Test2Network.txt", "w")
 socialNetwork = {}
 
 # uncomment if using real set
 numShared = 0
 realPeople = []
 realFriends = {}
-realSet = open("test.txt", "r")
+realSet = open("test2.txt", "r")
 originalShares = {}
 randCoin = 0
 for line in realSet:
