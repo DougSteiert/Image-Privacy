@@ -12,23 +12,25 @@ firstOrderShares = {}
 with open("Test2Network.txt") as f:
     for line in f:
         (key, value) = line.split('{')
-        # (person, shares) = key.split(' ')
-        newValue = '{' + value
-        newValue = newValue.rstrip()
-        newDict = ast.literal_eval(newValue)
-        if key in socialNetwork:
-            if key in newDict:
-                del newDict[key]
-            for newKey, (origin, sender, sentShares, origShares) in newDict.iteritems():
-                newerDict = {}
-                newerDict[newKey] = (origin, sender, sentShares, origShares)
-                socialNetwork[key].append(newDict)
+        if key == str(-1):
+            pass
         else:
-            socialNetwork[key] = []
-            for newKey, (origin, sender, sentShares, origShares) in newDict.iteritems():
-                newerDict = {}
-                newerDict[newKey] = (origin, sender, sentShares, origShares)
-                socialNetwork[key].append(newerDict)
+            newValue = '{' + value
+            newValue = newValue.rstrip()
+            newDict = ast.literal_eval(newValue)
+            if key in socialNetwork:
+                if key in newDict:
+                    del newDict[key]
+                for newKey, (origin, sender, sentShares, origShares) in newDict.iteritems():
+                    newerDict = {}
+                    newerDict[newKey] = (origin, sender, sentShares, origShares)
+                    socialNetwork[key].append(newDict)
+            else:
+                socialNetwork[key] = []
+                for newKey, (origin, sender, sentShares, origShares) in newDict.iteritems():
+                    newerDict = {}
+                    newerDict[newKey] = (origin, sender, sentShares, origShares)
+                    socialNetwork[key].append(newerDict)
 
 shareNetwork = {}
 
@@ -195,18 +197,13 @@ def calculateProb(someone, firstFriends, probMatrix, parents):
     while firstFriends:
         friend = firstFriends.pop(0)
         propChain.append(friend)
+        skipReady = False
         if friend not in friendsParents:
             temp = []
             for eachPred in dgraph.predecessors(friend):
                 if eachPred != friend:
                     temp.append(eachPred)
             friendsParents[friend] = temp
-        # numberParentsCalc = checkParentsTwo(probMatrix, friendsParents, someone, friend, priorityQueue)
-        #
-        # if numberParentsCalc == len(friendsParents[friend]):
-        #     computeChild(someone, friend, probMatrix, friendsParents)
-        #     firstFriends.remove(friend)
-        # expansionRoutine(friend, firstFriends, friendsParents)
 
         skipParent = False
 
@@ -223,7 +220,24 @@ def calculateProb(someone, firstFriends, probMatrix, parents):
                         elif newFriend in parents and parents[newFriend] is True:
                             pass
                         elif newFriend in firstFriends and newFriend in dgraph.predecessors(friend):
+                            temp2 = []
+                            for eachPred in dgraph.predecessors(newFriend):
+                                if eachPred != newFriend and eachPred != friend:
+                                    temp2.append(eachPred)
+                            friendsParents[newFriend] = temp2
                             computeChild(someone, newFriend, probMatrix, friendsParents, parents, propChain)
+                            if dgraph.successors(newFriend):
+                                for eachSuccessor in dgraph.successors(newFriend):
+                                    if eachSuccessor == newFriend:
+                                        pass
+                                    elif eachSuccessor not in firstFriends:
+                                        if eachSuccessor in parents:
+                                            if parents[eachSuccessor] == True:
+                                                pass
+                                        else:
+                                            firstFriends.append(eachSuccessor)
+                                            propChain.append(eachSuccessor)
+                            skipReady = True
                         elif newFriend not in firstFriends:
                             firstFriends.append(newFriend)
                             propChain.append(newFriend)
@@ -239,12 +253,16 @@ def calculateProb(someone, firstFriends, probMatrix, parents):
                                         else:
                                             firstFriends.append(eachSuccessor)
                                             propChain.append(eachSuccessor)
-                                    # elif eachSuccessor in firstFriends:
-                                    #     computeChild(someone, eachSuccessor, probMatrix, friendsParents, parents, propChain)
-
-            isReady = checkParents(friend, parents, friendsParents)
+            if skipReady:
+                isReady = False
+                pass
+            else:
+                isReady = checkParents(friend, parents, friendsParents)
         if isReady:
             computeChild(someone, friend, probMatrix, friendsParents, parents, propChain)
+            isReady = False
+        elif skipParent:
+            pass
         else:
             firstFriends.append(friend)
 
