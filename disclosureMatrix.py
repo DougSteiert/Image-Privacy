@@ -286,26 +286,22 @@ for eachPerson in socialNetwork:
 loop = 1
 finalProbMatrix = {}
 for person in allPeople:
-    if person == "U0":
-        print loop, person
-        loop += 1
-        priorityQueue = []
-        finalProbMatrix[person] = {}
-        parents = {}
-        if person in socialNetwork:
-            for listsOfInfo in socialNetwork[person]:
-                for theFriend, (origin, direct, sent, orig) in listsOfInfo.items():
-                    theFriend = str(theFriend)
-                    if theFriend != person and (theFriend not in priorityQueue):
-                        priorityQueue.append(theFriend)
-                    if dgraph.successors(theFriend):
-                        parents[theFriend] = False
+    print loop, person
+    loop += 1
+    priorityQueue = []
+    finalProbMatrix[person] = {}
+    parents = {}
+    if person in socialNetwork:
+        for listsOfInfo in socialNetwork[person]:
+            for theFriend, (origin, direct, sent, orig) in listsOfInfo.items():
+                theFriend = str(theFriend)
+                if theFriend != person and (theFriend not in priorityQueue):
+                    priorityQueue.append(theFriend)
+                if dgraph.successors(theFriend):
+                    parents[theFriend] = False
 
-            finalProbMatrix[person][person] = 1
-            calculateProb(person, priorityQueue, finalProbMatrix, parents)
-        break
-    # else:
-    #     finalProbMatrix[person] = {}
+        finalProbMatrix[person][person] = 1
+        calculateProb(person, priorityQueue, finalProbMatrix, parents)
 
 print (time.time() - startTime)
 
