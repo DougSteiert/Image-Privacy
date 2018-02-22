@@ -9,12 +9,20 @@ allPeople = []
 
 firstOrderShares = {}
 
+totalLines = 0
 with open("Test2Network.txt") as f:
+    firstPerson = True
     for line in f:
+        if totalLines >= 1000:
+            break
+        totalLines += 1
         (key, value) = line.split('{')
         if key == str(-1):
             pass
         else:
+            if firstPerson:
+                allPeople.append(key)
+                firstPerson = False
             newValue = '{' + value
             newValue = newValue.rstrip()
             newDict = ast.literal_eval(newValue)
@@ -32,7 +40,6 @@ with open("Test2Network.txt") as f:
                     newerDict[newKey] = (origin, sender, sentShares, origShares)
                     socialNetwork[key].append(newerDict)
 
-shareNetwork = {}
 
 # # Create a share network, similar to the social network, but for easier access to get shares to people
 # for person, theList in socialNetwork.iteritems():
@@ -52,13 +59,13 @@ dgraph = nx.DiGraph()
 
 # Create a directed graph between all people in the social network
 for person, theList in socialNetwork.iteritems():
-    if person not in allPeople:
-        allPeople.append(person)
+    # if person not in allPeople:
+    #     allPeople.append(person)
     for theGoods in theList:
         for friend in theGoods:
-            if friend not in allPeople:
-                allPeople.append(friend)
-            dgraph.add_edge(person, friend)
+            # if friend not in allPeople:
+            #     allPeople.append(friend)
+            dgraph.add_edge(str(person), str(friend))
 
 # The total amount of people within the network, used later for looping
 totalPeople = len(allPeople)
@@ -72,6 +79,9 @@ def computeScore(somePerson, aFriend, parentsList, propaChain):
 
     for theLists in socialNetwork[somePerson]:
         for friend, (originalSender, directSender, sentShares, origShares) in theLists.items():
+            friend = str(friend)
+            originalSender = str(originalSender)
+            directSender = str(directSender)
             if friend == aFriend and (originalSender in propaChain) and (directSender == somePerson):
                 sharesToFriend = sentShares
                 sharesToPerson = origShares
@@ -195,7 +205,7 @@ def calculateProb(someone, firstFriends, probMatrix, parents):
     propChain.append(someone)
 
     while firstFriends:
-        friend = firstFriends.pop(0)
+        friend = str(firstFriends.pop(0))
         propChain.append(friend)
         skipReady = False
         if friend not in friendsParents:
@@ -215,6 +225,7 @@ def calculateProb(someone, firstFriends, probMatrix, parents):
             if friend in socialNetwork:
                 for listsOfPeople in socialNetwork[friend]:
                     for newFriend, (origin, direct, sentShares, origShares) in listsOfPeople.items():
+                        newFriend = str(newFriend)
                         if newFriend == friend:
                             pass
                         elif newFriend in parents and parents[newFriend] is True:
@@ -266,6 +277,12 @@ def calculateProb(someone, firstFriends, probMatrix, parents):
         else:
             firstFriends.append(friend)
 
+testFile = open("testfile.txt", 'w')
+for eachPerson in socialNetwork:
+        testFile.write(str(eachPerson) + " ")
+        testFile.write(str(socialNetwork[eachPerson]))
+        testFile.write("\n")
+
 loop = 1
 finalProbMatrix = {}
 for person in allPeople:
@@ -278,6 +295,7 @@ for person in allPeople:
         if person in socialNetwork:
             for listsOfInfo in socialNetwork[person]:
                 for theFriend, (origin, direct, sent, orig) in listsOfInfo.items():
+                    theFriend = str(theFriend)
                     if theFriend != person and (theFriend not in priorityQueue):
                         priorityQueue.append(theFriend)
                     if dgraph.successors(theFriend):
