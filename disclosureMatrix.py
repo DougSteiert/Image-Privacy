@@ -10,11 +10,9 @@ allPeople = []
 firstOrderShares = {}
 
 totalLines = 0
-with open("Test2Network.txt") as f:
+with open("five-hop.txt") as f:
     firstPerson = True
     for line in f:
-        if totalLines >= 1000:
-            break
         totalLines += 1
         (key, value) = line.split('{')
         if key == str(-1):
