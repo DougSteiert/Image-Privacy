@@ -10,7 +10,7 @@ allPeople = []
 firstOrderShares = {}
 
 totalLines = 0
-with open("gplus3.txt") as f:
+with open("facebook1.txt") as f:
     firstPerson = True
     for line in f:
         totalLines += 1
@@ -221,8 +221,10 @@ def calculateProb(someone, firstFriends, probMatrix, parents, averageTime):
                 skipParent = True
 
         isReady = checkParents(friend, parents, friendsParents)
+        alreadyComputed = False
         if isReady:
             computeChild(someone, friend, probMatrix, friendsParents, parents, propChain)
+            alreadyComputed = True
 
         if not skipParent:
             if friend in socialNetwork:
@@ -274,12 +276,14 @@ def calculateProb(someone, firstFriends, probMatrix, parents, averageTime):
             else:
                 isReady = checkParents(friend, parents, friendsParents)
                 averageTime.append(time.time() - loopBegin)
-        if isReady:
+        if isReady and not alreadyComputed:
             computeChild(someone, friend, probMatrix, friendsParents, parents, propChain)
             isReady = False
             averageTime.append(time.time() - loopBegin)
         elif skipParent:
             averageTime.append(time.time() - loopBegin)
+            pass
+        elif alreadyComputed:
             pass
         else:
             firstFriends.append(friend)
