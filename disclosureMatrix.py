@@ -10,7 +10,7 @@ allPeople = []
 firstOrderShares = {}
 
 totalLines = 0
-with open("five-hop.txt") as f:
+with open("gplus3.txt") as f:
     firstPerson = True
     for line in f:
         totalLines += 1
@@ -196,13 +196,14 @@ def expansionRoutine(friend, firstFriends, friendsParents):
             friendsParents[successor] = dgraph.predecessors(successor)
 
 # Calculates the probability of someone and all their friends
-def calculateProb(someone, firstFriends, probMatrix, parents):
+def calculateProb(someone, firstFriends, probMatrix, parents, averageTime):
     parents[someone] = True
     friendsParents = {}
     propChain = []
     propChain.append(someone)
 
     while firstFriends:
+        loopBegin = time.time()
         friend = str(firstFriends.pop(0))
         propChain.append(friend)
         skipReady = False
@@ -219,6 +220,10 @@ def calculateProb(someone, firstFriends, probMatrix, parents):
             if parents[friend] is True:
                 skipParent = True
 
+        isReady = checkParents(friend, parents, friendsParents)
+        if isReady:
+            computeChild(someone, friend, probMatrix, friendsParents, parents, propChain)
+
         if not skipParent:
             if friend in socialNetwork:
                 for listsOfPeople in socialNetwork[friend]:
@@ -231,7 +236,7 @@ def calculateProb(someone, firstFriends, probMatrix, parents):
                         elif newFriend in firstFriends and newFriend in dgraph.predecessors(friend):
                             temp2 = []
                             for eachPred in dgraph.predecessors(newFriend):
-                                if eachPred != newFriend and eachPred != friend:
+                                if eachPred != newFriend:
                                     temp2.append(eachPred)
                             friendsParents[newFriend] = temp2
                             computeChild(someone, newFriend, probMatrix, friendsParents, parents, propChain)
@@ -264,25 +269,28 @@ def calculateProb(someone, firstFriends, probMatrix, parents):
                                             propChain.append(eachSuccessor)
             if skipReady:
                 isReady = False
+                averageTime.append(time.time() - loopBegin)
                 pass
             else:
                 isReady = checkParents(friend, parents, friendsParents)
+                averageTime.append(time.time() - loopBegin)
         if isReady:
             computeChild(someone, friend, probMatrix, friendsParents, parents, propChain)
             isReady = False
+            averageTime.append(time.time() - loopBegin)
         elif skipParent:
+            averageTime.append(time.time() - loopBegin)
             pass
         else:
             firstFriends.append(friend)
+            averageTime.append(time.time() - loopBegin)
 
-testFile = open("testfile.txt", 'w')
-for eachPerson in socialNetwork:
-        testFile.write(str(eachPerson) + " ")
-        testFile.write(str(socialNetwork[eachPerson]))
-        testFile.write("\n")
+preprocessTime = (time.time() - startTime)
+afterTime = time.time()
 
 loop = 1
 finalProbMatrix = {}
+averageTime = []
 for person in allPeople:
     print loop, person
     loop += 1
@@ -299,8 +307,17 @@ for person in allPeople:
                     parents[theFriend] = False
 
         finalProbMatrix[person][person] = 1
-        calculateProb(person, priorityQueue, finalProbMatrix, parents)
+        calculateProb(person, priorityQueue, finalProbMatrix, parents, averageTime)
 
-print (time.time() - startTime)
+calcTime = (time.time() - afterTime)
 
+avgTime = 0
+totalAvg = 0
+for eachItem in averageTime:
+    totalAvg += eachItem
+avgTime = (totalAvg / len(averageTime))
+
+print "Preprocess: ", preprocessTime
+print "Calculate Prob: ", calcTime
+print "Avg Person: ", avgTime
 print finalProbMatrix
