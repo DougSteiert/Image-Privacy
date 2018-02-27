@@ -1,5 +1,5 @@
 import networkx as nx
-import time
+import time, math
 import ast
 
 startTime = time.time()
@@ -10,7 +10,7 @@ allPeople = []
 firstOrderShares = {}
 
 totalLines = 0
-with open("facebook1.txt") as f:
+with open("facebook3-50.txt") as f:
     firstPerson = True
     for line in f:
         totalLines += 1
@@ -201,6 +201,7 @@ def calculateProb(someone, firstFriends, probMatrix, parents, averageTime):
     friendsParents = {}
     propChain = []
     propChain.append(someone)
+    numUsersToShare = math.ceil(.1*len(firstFriends))
 
     while firstFriends:
         loopBegin = time.time()
