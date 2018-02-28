@@ -203,6 +203,14 @@ def calculateProb(someone, firstFriends, probMatrix, parents, averageTime):
     propChain.append(someone)
     numUsersToShare = math.ceil(.1*len(firstFriends))
 
+    for aFriend in firstFriends:
+        if numUsersToShare > 0:
+            probMatrix[someone][aFriend] = 1
+            numUsersToShare -= 1
+            parents[aFriend] = True
+        else:
+            break
+
     while firstFriends:
         loopBegin = time.time()
         friend = str(firstFriends.pop(0))
@@ -326,3 +334,15 @@ print "Preprocess: ", preprocessTime
 print "Calculate Prob: ", calcTime
 print "Avg Person: ", avgTime
 print finalProbMatrix
+
+dgraph2 = nx.DiGraph()
+
+thePerson = allPeople.pop(0)
+# Create a directed graph between all people in the social network
+for person, theList in socialNetwork.iteritems():
+    for theGoods in theList:
+        for friend in theGoods:
+            if str(friend) in finalProbMatrix[thePerson]:
+                dgraph2.add_edge(str(person), str(friend), weight=finalProbMatrix[thePerson][str(friend)])
+
+nx.write_graphml(dgraph2, "testGraph.graphml")
